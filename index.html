@@ -272,7 +272,28 @@
 
         // Delete a service from the database
         async function deleteService(docId) {
-            if (confirm("¿Estás segura de que quieres eliminar este perfil?")) {
+            // Using a custom message box instead of `confirm()`
+            const confirmDelete = await new Promise(resolve => {
+                showMessage("¿Estás segura de que quieres eliminar este perfil?");
+                const yesButton = document.createElement('button');
+                yesButton.textContent = "Sí, eliminar";
+                yesButton.className = "w-full bg-red-500 text-white font-semibold py-2 rounded-full hover:bg-red-700 transition duration-300 mt-2";
+                yesButton.onclick = () => {
+                    resolve(true);
+                    hideMessage();
+                };
+                const noButton = document.createElement('button');
+                noButton.textContent = "Cancelar";
+                noButton.className = "w-full bg-gray-400 text-white font-semibold py-2 rounded-full hover:bg-gray-600 transition duration-300 mt-2";
+                noButton.onclick = () => {
+                    resolve(false);
+                    hideMessage();
+                };
+                messageBox.querySelector('.bg-white').appendChild(yesButton);
+                messageBox.querySelector('.bg-white').appendChild(noButton);
+            });
+
+            if (confirmDelete) {
                 try {
                     await deleteDoc(doc(db, `artifacts/${appId}/public/data/services`, docId));
                     showMessage("Perfil eliminado correctamente.");
@@ -286,35 +307,33 @@
 
         // Initialize Firebase and Auth
         try {
+            console.log("Intentando inicializar Firebase...");
             const firebaseConfig = JSON.parse(firebaseConfigString);
-            if (Object.keys(firebaseConfig).length === 0) {
-                console.error("Firebase config is empty. The app cannot connect to the database.");
-                showMessage("La configuración de la base de datos no está disponible. No se pueden cargar los servicios.");
-            } else {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
             
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        userIdDisplay.textContent = userId;
-                        addServiceBtn.onclick = () => {
-                            newServiceFormSection.classList.remove('hidden');
-                            document.getElementById('profile-name').focus();
-                        };
-                    } else {
-                        userId = null;
-                        userIdDisplay.textContent = 'No autenticado';
-                    }
-                });
-
-                // Sign in with the provided token or anonymously
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            console.log("Firebase inicializado con éxito.");
+            
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    userIdDisplay.textContent = userId;
+                    addServiceBtn.onclick = () => {
+                        newServiceFormSection.classList.remove('hidden');
+                        document.getElementById('profile-name').focus();
+                    };
                 } else {
-                    await signInAnonymously(auth);
+                    userId = null;
+                    userIdDisplay.textContent = 'No autenticado';
                 }
+            });
+
+            // Sign in with the provided token or anonymously
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                await signInAnonymously(auth);
             }
             
             // Populate the age dropdown
@@ -340,7 +359,7 @@
 
         } catch (error) {
             console.error("Firebase initialization error:", error);
-            showMessage("Hubo un error al conectar con la base de datos. Intenta más tarde.");
+            showMessage("Hubo un error al conectar con la base de datos. Es posible que sea un problema de red.");
         }
 
         // Function to copy a number to the clipboard
@@ -505,7 +524,7 @@
                     });
                 }
             }, (error) => {
-                console.error("Error listening to services:", error);
+                console.error("Error al escuchar los servicios:", error);
                 loadingServices.classList.add('hidden');
                 servicesGrid.innerHTML = '<p class="text-center col-span-full text-red-500">Error al cargar los servicios. Por favor, revisa la consola.</p>';
             });
