@@ -237,9 +237,25 @@
 
         // Global variables provided by the environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
+
+        // -------------------------------------------------------------------------------------------
+        // INSTRUCCIÓN IMPORTANTE: Reemplaza estos valores por los de tu configuración de Firebase.
+        // Si no tienes una, crea una en https://firebase.google.com/
+        //
+        // El error en la consola "auth/api-key-not-valid" significa que debes actualizar
+        // los valores del objeto `firebaseConfig` con la información de tu proyecto.
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_DOMINIO.firebaseapp.com",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_BUCKET.appspot.com",
+            messagingSenderId: "TU_MESSAGING_ID",
+            appId: "TU_APP_ID"
+        };
+        //
+        // -------------------------------------------------------------------------------------------
+
         let db;
         let auth;
         let userId;
@@ -308,8 +324,6 @@
         // Initialize Firebase and Auth
         try {
             console.log("Intentando inicializar Firebase...");
-            const firebaseConfig = JSON.parse(firebaseConfigString);
-            
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             auth = getAuth(app);
@@ -388,7 +402,7 @@
 
             const imagesHtml = service.images.map(imgSrc => `<img src="${imgSrc}" alt="Imagen del servicio de ${service.profileName}" class="w-full object-cover rounded-md shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/400x300/d1d5db/374151?text=Sin+Imagen';">`).join('');
             const locationsHtml = service.location ? `<p class="text-gray-600 mb-2 font-semibold">Ubicación: ${service.location.join(' • ')}</p>` : '';
-            const priceHtml = service.priceRange ? `<p class="text-gray-600 mb-2 font-semibold">Precios: S/ ${service.priceRange.min} - S/ ${service.priceRange.max}</p>` : '';
+            const priceHtml = service.priceRange ? `<p class="text-gray-600 font-semibold mb-2">Precios: S/ ${service.priceRange.min} - S/ ${service.priceRange.max}</p>` : '';
 
             profileDetailsContent.innerHTML = `
                 <h3 class="text-3xl font-bold text-purple mb-4">${service.profileName}</h3>
@@ -539,3 +553,4 @@
     </script>
 </body>
 </html>
+
